@@ -21,15 +21,15 @@ import statistics
 from collections import Counter
 # https://github.com/briney/nwalign3
 # ftp://ftp.ncbi.nih.gov/blast/matrices/
-import nwalign3 as nw
+#import nwalign3 as nw
 
-__author__ = "Your Name"
+__author__ = "Apollinaire Roubert"
 __copyright__ = "Universite Paris Diderot"
-__credits__ = ["Your Name"]
+__credits__ = ["Apollinaire Roubert"]
 __license__ = "GPL"
 __version__ = "1.0.0"
-__maintainer__ = "Your Name"
-__email__ = "your@email.fr"
+__maintainer__ = "Apollinaire Roubert"
+__email__ = "apollinaire.roubert@etu.u-paris,fr"
 __status__ = "Developpement"
 
 
@@ -69,6 +69,90 @@ def get_arguments():
                         default="OTU.fasta", help="Output file")
     return parser.parse_args()
 
+
+def read_fasta(amplicon_file, minseqlen):
+    with open(amplicon_file, "r") as filin:
+        lines = filin.readlines()
+        flag = 0
+        tmp = ''
+        for line in lines:
+            if line.startswith(">"):
+                if tmp != '':
+                    if len(tmp) >= minseqlen:
+                        yield tmp
+                    tmp = ''
+            else:
+                flag = 0
+                tmp += line.strip()
+        if len(tmp) >= minseqlen:
+            yield(tmp)
+            
+
+
+def dereplication_fulllength(amplicon_file, minseqlen, mincount):
+    dict_seq = read_fasta(amplicon_file, minseqlen)
+    seqs = {}
+    yield_list = []
+    yield_index = []
+    for seq in dict_seq:
+        if seq not in seqs:
+            seqs[seq] = 1
+        else:
+            seqs[seq] += 1
+    for seq, occ in seqs.items():
+        if occ >= mincount:
+            yield_list.append(seq)
+            yield_index.append(occ)
+    while len(yield_index) != 0:
+        curr = [i for i, x in enumerate(yield_index) if x == max(yield_index)]
+        yield [yield_list[curr[0]], yield_index[curr[0]]]
+        yield_list.pop(curr[0])
+        yield_index.pop(curr[0])
+        
+
+def test_get_chunks():
+    pass
+
+
+def test_unique():
+    pass
+
+
+def test_common():
+    pass
+
+
+def test_cut_kmer():
+    pass
+
+
+def test_get_unique_kmer():
+    pass
+
+
+def test_search_mates():
+    pass
+
+
+def test_get_identity():
+    pass
+
+
+def test_detect_chimera():
+    pass
+
+
+def test_chimera_removal():
+    pass
+
+
+def test_abundance_greedy_clustering():
+    pass
+
+
+def test_write_OTU():
+    pass
+
 #==============================================================
 # Main program
 #==============================================================
@@ -78,6 +162,10 @@ def main():
     """
     # Get arguments
     args = get_arguments()
+    dereplication = dereplication_fulllength(args.amplicon_file, args.minseqlen,
+                                    args.mincount)
+    
+    
 
 
 if __name__ == '__main__':
